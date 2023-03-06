@@ -1,0 +1,32 @@
+{% extends 'baseAdmin.html.twig' %}
+
+{% block title %}アンケート協力謝礼受け取り{% endblock %}
+
+{% block body %}
+    
+    <div class="row m-3 text-center">
+        <a class="btn btn-success" href="{{ path('app_admin_create_event') }}"
+        style="width: 150px; height: 63px;"
+        role="button">Create a new event</a>
+        <table class="table w-75 table-striped border border-dark mx-auto">
+            <thead>
+                <tr>
+                <th scope="col">#</th>
+                <th scope="col">Event Name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Handle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <th scope="row">{{ event.id }}</th>
+                    <td>{{ event.name }}</td>
+                    <td>{{ event.description }}</td>
+                    <td><a class="btn btn-primary" href="{{ path('app_admin_event', {'id': event.id}) }}" role="button">Manage</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,37 @@
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+
+app_main_index:
+    path: /
+    controller: App\Controller\MainController::index
+
+app_main_resetpassword:
+    path: /resetpassword
+    controller: App\Controller\MainController::resetpassword
+
+app_main_reward:
+    path: /reward
+    controller: App\Controller\MainController::reward
+
+app_admin_index:
+    path: /admin/
+    controller: App\Controller\AdminController::index
+
+app_admin_dashboard:
+    path: /admin/dashboard
+    controller: App\Controller\AdminController::dashboard
+
+app_admin_events:
+    path: /admin/events
+    controller: App\Controller\AdminController::events
+
+app_admin_management:
+    path: /admin/management
+    controller: App\Controller\AdminController::management
+
+app_admin_logout:
+    path: /admin/logout
+    controller: App\Controller\AdminController::logout

@@ -1,0 +1,64 @@
+{% extends 'baseAdmin.html.twig' %}
+
+{% block title %}アンケート協力謝礼受け取り{% endblock %}
+
+{% block body %}
+    <div class="row m-3 bg-primary text-white">
+        {{ form_start(form) }}
+            <div class="text-danger">
+                {{ form_errors(form) }}
+            </div>
+            <h4 class="font-weight-bold mb-4 text-center">
+                {{ form_label(form.name) }}<br>
+                {{ form_widget(form.name, {'attr': {'class': 'w-50 text-center'}}) }}<br>
+            </h4>
+
+            <div class="row justify-content-around pb-4">
+                <div class="col-4 rounded border border-dark border-2">
+                    <p class="text-left">
+                        Yen amount per gift card: {{ form_widget(form.AmazonAmount, {'attr': {'class': 'w-50 text-center'}}) }} ¥ <br>
+                        Number of participants: {{ form_widget(form.NumberCodes, {'attr': {'class': 'w-50 text-center'}}) }} <br>
+                        Number of code per participant: {{ form_widget(form.nbCodeGift, {'attr': {'class': 'w-50 text-center'}}) }}
+                    </p>
+                    <p class="text-center">
+                        Description:<br>
+                        {{ form_widget(form.Description, {'attr': {'class': 'w-100 text-center'}}) }}
+                    </p>
+                </div>
+                <div class="col-7  rounded border border-dark border-2">
+                    
+                    <p>
+                        SMTP: GMAIL<br>
+                        SMTP email: {{ form_widget(form.SMTPEmail, {'attr': {'class': 'w-50 text-center'}}) }} <br>
+                        {{ form_label(form.SMTPPassword) }} {{ form_widget(form.SMTPPassword, {'attr': {'class': 'w-50 text-center'}}) }} <br>
+                        {{ form_label(form.EmailHeader) }} {{ form_widget(form.EmailHeader, {'attr': {'class': 'w-100 text-center'}}) }} <br>
+                        {{ form_label(form.EmailSubject) }} {{ form_widget(form.EmailSubject, {'attr': {'class': 'w-50 text-center'}}) }} <br>
+                        
+                    </p>
+                </div>
+            </div>
+
+            <div class="row justify-content-center text-center mb-3 ">
+                {{ form_label(form.EmailBody) }}
+                (Do not forget to add \n if you want to add an escape line)<br>
+                (Add $.$code_pass$.$ where you want the password to be shown)<br>
+                (Add $.$code_event$.$ where you want the code event to be shown)<br>
+                {{ form_widget(form.EmailBody, {'attr': {'class': 'w-75 text-center', 'style': 'height: 200px;'}}) }}<br>
+            </div>
+            <div class="row justify-content-center text-center mb-3 ">
+                {{ form_label(form.EmailAltBody) }}
+                (Do not forget to add &lt;br /&gt; if you want to add an escape line)<br>
+                (Your text need to begin with &lt;p&gt; and finish with &lt;/p&gt;)<br>
+                (Add $.$code_pass$.$ where you want the password to be shown)<br>
+                (Add $.$code_event$.$ where you want the code event to be shown)<br>
+                {{ form_widget(form.EmailAltBody, {'attr': {'class': 'w-75 text-center', 'style': 'height: 200px;'}}) }}<br>
+            </div>
+
+            <div class="row justify-content-center text-center" id="some-custom-id">
+                {{ form_row(form.submit) }}
+            </div>
+        {{ form_end(form) }}
+
+    </div>
+
+{% endblock %}
