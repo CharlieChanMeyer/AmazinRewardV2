@@ -86,7 +86,16 @@
                             <tr>
                             <th scope="col">#</th>
                             <th scope="col">User email</th>
-                            <th scope="col">Got code(s)</th>
+                            <th scope="col">Got {% if event.nbCodeGift > 1 %}
+                            codes
+                            {% else %}
+                            code
+                            {% endif %} 
+                            (Total: {{ totalGotCode }} {% if totalGotCode > 1 %}
+                            Users)
+                            {% else %}
+                            User)
+                            {% endif %}</th>
                             <th scope="col">Reset password</th>
                             </tr>
                         </thead>

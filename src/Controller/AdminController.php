@@ -187,10 +187,11 @@ class AdminController extends AbstractController
         }
 
         $eventUsers= array();
-
+        $totalGotCode = 0;
         foreach ($eventUsersArray as $user) {
             if (in_array($user,$eventHistoryUsers)) {
                 array_push($eventUsers,array($user->getId(),$user->getEmail(),"Yes"));
+                $totalGotCode++;
             } else {
                 array_push($eventUsers,array($user->getId(),$user->getEmail(),"No"));
             }
@@ -332,6 +333,7 @@ class AdminController extends AbstractController
             'codeAmazonEvent' => $codeAmazonEvent,
             'form' => $form,
             'emailTestForm' => $emailTestForm,
+            'totalGotCode' => $totalGotCode,
         ]); 
     }
 
@@ -365,6 +367,7 @@ class AdminController extends AbstractController
         $form = $this->createForm(EventType::class,$event);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $event->setSMTPPassword(self::encrypt($form->get('SMTPPassword')->getData()));
             $eventsRepo->save($event);
             $entityManager->flush();
             $session->set('message', "The event has been saved.");
@@ -407,8 +410,10 @@ class AdminController extends AbstractController
         $event = $eventsRepo->find($id);
 
         $form = $this->createForm(EventType::class,$event);
+        $form->get('SMTPPassword')->setData(self::decrypt($event->getSMTPPassword()));
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $event->setSMTPPassword(self::encrypt($form->get('SMTPPassword')->getData()));
             $eventsRepo->save($event);
             $entityManager->flush();
             $session->set('message', "The edit has been saved.");
@@ -644,7 +649,7 @@ class AdminController extends AbstractController
         $mail->SMTPAuth = true;
         
         $mail->Username = $event->getSMTPEmail();
-        $mail->Password = $event->getSMTPPassword();
+        $mail->Password = self::decrypt($event->getSMTPPassword());
         $mail->setFrom($event->getSMTPEmail(), mb_encode_mimeheader($event->getEmailHeader()));
 
         $mail->addAddress($line); 
@@ -709,7 +714,7 @@ class AdminController extends AbstractController
         $mail->SMTPAuth = true;
         
         $mail->Username = $stmpEmail;
-        $mail->Password = $stmpPassword;
+        $mail->Password = self::decrypt($stmpPassword);
         $mail->setFrom($stmpEmail, mb_encode_mimeheader("Amazon survey reward | Admin"));
 
         $mail->addAddress($line); 
@@ -744,5 +749,42 @@ class AdminController extends AbstractController
             $message = "Emails sent";
         }
         return $message;
+    }
+
+    private function encrypt(String $toCrypt): String
+    {
+        // Store the cipher method
+        $ciphering = "AES-128-CTR";
+
+        // Use OpenSSl Encryption method
+        $iv_length = openssl_cipher_iv_length($ciphering);
+        $options = 0;
+
+        // Non-NULL Initialization Vector for encryption
+        $encryption_iv = '1234567891011121';
+
+        // Store the encryption key
+        $encryption_key = "AzRdIMPLabo324";
+
+        // Use openssl_encrypt() function to encrypt the data
+        return(openssl_encrypt($toCrypt, $ciphering,
+                $encryption_key, $options, $encryption_iv));
+    }
+
+    private function decrypt(String $toDecrypt): String
+    {
+        // Store the cipher method
+        $ciphering = "AES-128-CTR";
+
+        // Non-NULL Initialization Vector for decryption
+        $decryption_iv = '1234567891011121';
+        $options = 0;
+        
+        // Store the decryption key
+        $decryption_key = "AzRdIMPLabo324";
+        
+        // Use openssl_decrypt() function to decrypt the data
+        return(openssl_decrypt ($toDecrypt, $ciphering, 
+                $decryption_key, $options, $decryption_iv));
     }
 }

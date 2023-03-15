@@ -173,7 +173,7 @@ class MainController extends AbstractController
                 $mail->SMTPAuth = true;
                 
                 $mail->Username = $event->getSMTPEmail();
-                $mail->Password = $event->getSMTPPassword();
+                $mail->Password =self::decrypt($event->getSMTPPassword());
                 $mail->setFrom($event->getSMTPEmail(), mb_encode_mimeheader('大阪公立大学　大学院情報学研究科　基幹情報学専攻　岩村雅一'));
 
                 $mail->addAddress($email); 
@@ -268,5 +268,22 @@ class MainController extends AbstractController
         } else {
             return array_rand($array);
         }
+    }
+
+    private function decrypt(String $toDecrypt): String
+    {
+        // Store the cipher method
+        $ciphering = "AES-128-CTR";
+
+        // Non-NULL Initialization Vector for decryption
+        $decryption_iv = '1234567891011121';
+        $options = 0;
+        
+        // Store the decryption key
+        $decryption_key = "AzRdIMPLabo324";
+        
+        // Use openssl_decrypt() function to decrypt the data
+        return(openssl_decrypt ($toDecrypt, $ciphering, 
+                $decryption_key, $options, $decryption_iv));
     }
 }
