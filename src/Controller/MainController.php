@@ -48,18 +48,18 @@ class MainController extends AbstractController
             if ($user != null) {
                 $hpass = $user->getpassword();
                 if (!password_verify($password, $hpass)) {
-                    $success = "パスワードが正しくない。";
+                    $success = "パスワードが正しくありません。";
                 } else {
                     $eventRepo = $entityManager->getRepository(Events::class);
                     $user = $userRepo->find($userID);
                     $event = $eventRepo->find($eventID);
                     $userEvents = ($user->getEvents())->toArray();
                     if (!in_array($event,$userEvents)){
-                        $success = "ご案内のイベントには登録されていないようですが";
+                        $success = "ご案内のイベントには登録されていないようです";
                     }
                 }
             } else {
-                $success = "表示されたメールは、アクティブリワードには関係ありません。";
+                $success = "入力されたメールはシステムに登録されていません";
             }
             if ($success == null) {
                 $session->set('eventID', $eventID);

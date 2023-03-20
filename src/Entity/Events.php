@@ -58,6 +58,9 @@ class Events
     #[ORM\Column]
     private ?int $nbCodeGift = null;
 
+    #[ORM\Column(options : ["default" => 1])]
+    private ?int $SMTP = null;
+
     public function __construct()
     {
         $this->Users = new ArrayCollection();
@@ -282,6 +285,18 @@ class Events
     public function setNbCodeGift(int $nbCodeGift): self
     {
         $this->nbCodeGift = $nbCodeGift;
+
+        return $this;
+    }
+
+    public function getSMTP(): ?int
+    {
+        return $this->SMTP;
+    }
+
+    public function setSMTP(int $SMTP): self
+    {
+        $this->SMTP = $SMTP;
 
         return $this;
     }

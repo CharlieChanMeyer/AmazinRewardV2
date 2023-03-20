@@ -24,7 +24,13 @@
             <div class="col-6  rounded border border-dark border-2">
                 
                 <p>
-                    SMTP: GMAIL<br>
+                    SMTP: 
+                    {% if event.SMTP == 1 %}
+                        GMAIL
+                    {% else %}
+                        Outlook
+                    {% endif %}
+                    <br>
                     SMTP email: {{ event.SMTPEmail }} | {{ event.EmailHeader }}<br>
                     Email subject: {{ event.EmailSubject }}<br>
                     <p>

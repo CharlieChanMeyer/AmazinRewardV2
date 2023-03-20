@@ -482,7 +482,7 @@ class AdminController extends AbstractController
             $entityManager->flush();
             $eventRepo = $entityManager->getRepository(Events::class);
             $event = $eventRepo->find(1);
-            $message = self::sendEmailAdmin($email,$pass,$eventRepo->getSMTPEmail(),$eventRepo->getSMTPPassword());
+            $message = self::sendEmailAdmin($email,$pass,$event->getSMTPEmail(),$event->getSMTPPassword());
 
             if ($message == "Error") {
                 $session->set('message', "Email failed to send for $line. Password: $pass");
@@ -643,9 +643,15 @@ class AdminController extends AbstractController
         $mail->isSMTP();
         $mail->SMTPDebug = false;
         $mail->Debugoutput = 'html';
-        $mail->Host = 'smtp.gmail.com';
-        $mail->Port = 587;
-        $mail->SMTPSecure = 'tls';
+        if ($event->getSMTP() == 1) {
+            $mail->Host = 'smtp.gmail.com';
+            $mail->Port = 587;
+            $mail->SMTPSecure = 'tls';
+        } else if ($event->getSMTP() == 2) {
+            $mail->Host = 'smtp-mail.outlook.com';
+            $mail->Port = 587;
+            $mail->SMTPSecure = 'tls';
+        }
         $mail->SMTPAuth = true;
         
         $mail->Username = $event->getSMTPEmail();

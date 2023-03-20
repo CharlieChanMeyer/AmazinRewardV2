@@ -28,7 +28,7 @@
                 <div class="col-7  rounded border border-dark border-2">
                     
                     <p>
-                        SMTP: GMAIL<br>
+                        {{ form_label(form.SMTP) }} {{ form_widget(form.SMTP, {'attr': {'class': 'w-50 text-center'}}) }} <br>
                         SMTP email: {{ form_widget(form.SMTPEmail, {'attr': {'class': 'w-50 text-center'}}) }} <br>
                         {{ form_label(form.SMTPPassword) }} {{ form_widget(form.SMTPPassword, {'attr': {'class': 'w-50 text-center'}}) }} <br>
                         {{ form_label(form.EmailHeader) }} {{ form_widget(form.EmailHeader, {'attr': {'class': 'w-100 text-center'}}) }} <br>
