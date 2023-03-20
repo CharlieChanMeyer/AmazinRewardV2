@@ -4,7 +4,7 @@
 
 {% block body %}
     <div class="container mt-3">
-        <a class="btn btn-danger" href="{{ path('app_main_index') }}" role="button">Logout </a>
+        <a class="btn btn-danger" href="{{ path('app_main_index', {'eventID': event_id}) }}" role="button">Logout </a>
         <div class="mt-4 p-5 bg-primary text-white rounded text-center">
             <h1 class="mb-5">アンケート回答謝礼受け取り</h1>
             <h4>あなたのメールアドレス : {{ email }}</h4>
@@ -12,7 +12,6 @@
     </div>
     <div class="container mt-3">
         <div class="mt-4 p-5 bg-success text-white rounded text-center">
-            <h4>特典コード : {{ event_id }}</h4>
             {% for code in codeArray %}
                 <h4>Amazonギフトコード : {{ code }}</h4>
             {% endfor %}

@@ -19,11 +19,12 @@ use App\Entity\Users;
 use App\Entity\Events;
 use App\Entity\CodeAmazon;
 use App\Entity\HistoryLog;
+use App\Entity\NbCodeUserEvent;
 
 class MainController extends AbstractController
 {
-    #[Route('/', name: 'app_main_index')]
-    public function index(EntityManagerInterface $entityManager,Request $request): Response
+    #[Route('/{eventID}', name: 'app_main_index', requirements: ['eventID' => '\d+'])]
+    public function index(EntityManagerInterface $entityManager,Request $request,int $eventID): Response
     {
         $session = $request->getSession();
         $message = null;
@@ -31,6 +32,7 @@ class MainController extends AbstractController
             $message = $session->get('message');
             $session->set('message', "");
         }
+        $session->set('eventID', $eventID);
 
         $userRepo = $entityManager->getRepository(Users::class);
         $loginForm = $this->createForm(LoginType::class);
@@ -39,7 +41,6 @@ class MainController extends AbstractController
         if ($loginForm->isSubmitted() && $loginForm->isValid()) {
             $email = $loginForm->get('email')->getData();
             $password = $loginForm->get('password')->getData();
-            $eventID = $loginForm->get('rewardCode')->getData();
             $user = $userRepo->findOneBy([
                 'email' => $email,
             ]);
@@ -62,12 +63,11 @@ class MainController extends AbstractController
                 $success = "入力されたメールはシステムに登録されていません";
             }
             if ($success == null) {
-                $session->set('eventID', $eventID);
                 $session->set('userID', $userID);
                 return $this->redirectToRoute('app_main_reward');
             } else {
                 $session->set('message', $success);
-                return $this->redirectToRoute('app_main_index');
+                return $this->redirectToRoute('app_main_index', array('eventID' => $eventID));
             }
             
         }
@@ -90,6 +90,7 @@ class MainController extends AbstractController
 
         $userRepo = $entityManager->getRepository(Users::class);
         $eventRepo = $entityManager->getRepository(Events::class);
+        $nbCodeRepo = $entityManager->getRepository(NbCodeUserEvent::class);
         $user = $userRepo->find($userID);
         $event = $eventRepo->find($eventID);
         $userEvents = ($user->getEvents())->toArray();
@@ -97,27 +98,85 @@ class MainController extends AbstractController
         if (in_array($event,$userEvents)) {
             $codeRepo = $entityManager->getRepository(CodeAmazon::class);
             $historyRepo = $entityManager->getRepository(HistoryLog::class);
+            $nbCode = $nbCodeRepo->findOneBy([
+                'User' => $user,
+                'Event' => $event,
+            ]);
             $oldcode = $historyRepo->findBy([
                 'event_id' => $event,
                 'email_id' => $user,
             ]);
             $codeArray = array();
             if (count($oldcode) == 0) {
-                $code = $codeRepo->findBy([
-                    'event' => $event,
-                    'used' => 0
-                ],null,$event->getNbCodeGift());
-                foreach ($code as $codeO) {
-                    $codeO->setUsed(1);
-                    $log = new HistoryLog();
-                    $log->setEmailId($user);
-                    $log->setAmazonCodeId($codeO);
-                    $log->setEventId($event);
-                    $log->setDatetime(new \DateTime());
-                    $historyRepo->save($log);
-                    array_push($codeArray,$codeO->getAmazonCode());
+                if ($nbCode != null) {
+                    $code = $codeRepo->findBy([
+                        'event' => $event,
+                        'used' => 0
+                    ],null,$nbCode->getNbCode());
+                } else {
+                    $code = $codeRepo->findBy([
+                        'event' => $event,
+                        'used' => 0
+                    ],null,$event->getNbCodeGift());
                 }
-                $entityManager->flush();
+                if ($nbCode->getNbCode() == sizeof($code)) {
+                    foreach ($code as $codeO) {
+                        $codeO->setUsed(1);
+                        $log = new HistoryLog();
+                        $log->setEmailId($user);
+                        $log->setAmazonCodeId($codeO);
+                        $log->setEventId($event);
+                        $log->setDatetime(new \DateTime());
+                        $historyRepo->save($log);
+                        array_push($codeArray,$codeO->getAmazonCode());
+                    }
+                    $entityManager->flush();
+                } else {
+                    mb_language("japanese");
+                mb_internal_encoding("UTF-8");
+
+                $mail = new PHPMailer(true);
+
+                $mail->CharSet = "iso-2022-jp";
+                $mail->Encoding = "7bit";
+                $mail->setLanguage('ja', 'PHPMailer/language/');
+
+                $mail->isSMTP();
+                $mail->SMTPDebug = false;
+                $mail->Debugoutput = 'html';
+                $mail->Host = 'smtp.gmail.com';
+                $mail->Port = 587;
+                $mail->SMTPSecure = 'tls';
+                $mail->SMTPAuth = true;
+                
+                $mail->Username = $event->getSMTPEmail();
+                $mail->Password =self::decrypt($event->getSMTPPassword());
+                $mail->setFrom($event->getSMTPEmail(), mb_encode_mimeheader('アマゾンコード特典システム'));
+
+                $mail->addAddress("masa229@gmail.com"); 
+                $mail->Subject = mb_encode_mimeheader('コード欠損');
+                                                    
+                $email_body = mb_convert_encoding("Amazon Code Reward。\n
+                イベント $eventID でのコードが足りない 。コードの追加をお願いします ","JIS","UTF-8");
+
+                $email_body = wordwrap($email_body,70);
+
+                $mail->msgHTML(mb_convert_encoding("
+                <p>Amazon Code Reward。<br />
+                イベント $eventID でのコードが足りない 。コードの追加をお願いします</p>","JIS","UTF-8"));
+
+                $mail->AltBody = $email_body;
+
+                if (!$mail->send()) {
+                    $message = "Mailer Error $line:\n";
+                    $message .= $mail->ErrorInfo;
+                } else {
+                    $entityManager->flush();
+                }
+
+                    $session->set('message', "システムのコードが足りない。管理者に連絡した。明日、再試行してください");
+                    return $this->redirectToRoute('app_main_index', array('eventID' => $eventID));
+                }
             } else {
                 foreach ($oldcode as $code) {
                     array_push($codeArray,($codeRepo->find($code->getAmazonCodeId()))->getAmazonCode());
@@ -140,6 +199,7 @@ class MainController extends AbstractController
     {
         $userRepo = $entityManager->getRepository(Users::class);
         $session = $request->getSession();
+        $message = $session->get('eventID');
         $resetForm = $this->createForm(ResetPasswordType::class);
 
         $resetForm->handleRequest($request);
@@ -211,7 +271,7 @@ class MainController extends AbstractController
             }
             $message = "メールが正しければ、新しいパスワードが送信されました。";
             $session->set('message', $message);
-            return $this->redirectToRoute('app_main_index');
+            return $this->redirectToRoute('app_main_index', array('eventID' => $eventID));
         }
 
 

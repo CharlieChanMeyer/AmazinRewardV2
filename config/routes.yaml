@@ -5,8 +5,10 @@ controllers:
     type: attribute
 
 app_main_index:
-    path: /
+    path:       /{eventID}
     controller: App\Controller\MainController::index
+    defaults:
+        page: 1
 
 app_main_resetpassword:
     path: /resetpassword

@@ -28,12 +28,6 @@ class LoginType extends AbstractType
                     "placeholder" => "パスワードを入力してください。"
                 ]
             ])
-            ->add('rewardCode', IntegerType::class, [
-                'label' => "実験番号: ",
-                'attr' => [
-                    "placeholder" => "実験番号を入力してください。"
-                ]
-            ])
             ->add('submit', SubmitType::class)
         ;
     }

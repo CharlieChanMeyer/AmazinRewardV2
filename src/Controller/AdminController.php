@@ -21,6 +21,7 @@ use App\Form\EmailTestType;
 use App\Entity\Users;
 use App\Entity\Events;
 use App\Entity\CodeAmazon;
+use App\Entity\NbCodeUserEvent;
 
 class AdminController extends AbstractController
 {
@@ -161,6 +162,7 @@ class AdminController extends AbstractController
 
         $eventsRepo = $entityManager->getRepository(Events::class);
         $codeAmazonRepo = $entityManager->getRepository(CodeAmazon::class);
+        $nbCodeRepo = $entityManager->getRepository(NbCodeUserEvent::class);
         $event = $eventsRepo->find($id);
         $codeAmazonUsed = count($codeAmazonRepo->findBy([
             'event' => $event,
@@ -251,24 +253,50 @@ class AdminController extends AbstractController
                                 $newUser->setEmail($line);
                                 $newUser->setPassword($hpass);
                                 $newUser->setRole(0);
+                                $newNbCode = new NbCodeUserEvent();
+                                $newNbCode->setUser($newUser);
+                                $newNbCode->setEvent($event);
+                                $newNbCode->setNbCode(1);
+
+                                $nbCodeRepo->save($newNbCode);
+                                $newUser->addEvent($event);
+                                $usersRepo->save($newUser);
+
+                                $message = self::sendEmail($event,$line,$pass);
                             } else {
-                                $newUser->setPassword($hpass);
+                                $nbCode = $nbCodeRepo->findOneBy([
+                                    'User' => $newUser,
+                                    'Event' => $event,
+                                ]);
+                                if ($nbCode == null) {
+                                    $newUser->setPassword($hpass);
+                                    $newNbCode = new NbCodeUserEvent();
+                                    $newNbCode->setUser($newUser);
+                                    $newNbCode->setEvent($event);
+                                    $newNbCode->setNbCode(1);
+
+                                    $nbCodeRepo->save($newNbCode);
+                                    $newUser->addEvent($event);
+                                    $usersRepo->save($newUser);
+
+                                    $message = self::sendEmail($event,$line,$pass);
+                                } else {
+                                    $nbCode->setNbCode($nbCode->getNbCode()+1);
+
+                                    $nbCodeRepo->save($newNbCode);
+                                }
+                                
                             }
                             
-                            $newUser->addEvent($event);
-                            $usersRepo->save($newUser);
-
-                            $message = self::sendEmail($event,$line,$pass);
+                            $entityManager->flush();
 
                             if ($message == "Error") {
                                 $session->set('message', "Email failed to send for $line. Password: $pass");
                                 return $this->redirectToRoute('app_admin_event', array('id' => $event->getId()));
                             }
-                
+                            
                         }
                     }
-                    
-                    $entityManager->flush();
                     $session->set('message', "Emails send");
                     return $this->redirectToRoute('app_admin_event', array('id' => $event->getId()));
                 } else {
@@ -417,7 +445,7 @@ class AdminController extends AbstractController
             $eventsRepo->save($event);
             $entityManager->flush();
             $session->set('message', "The edit has been saved.");
-            return $this->redirectToRoute('app_admin_event', array('id' => $event->getId()),);
+            return $this->redirectToRoute('app_admin_event', array('id' => $event->getId()));
         }
 
         return $this->render('admin/event_edit.html.twig', [

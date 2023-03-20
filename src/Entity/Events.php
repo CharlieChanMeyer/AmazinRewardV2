@@ -61,6 +61,9 @@ class Events
     #[ORM\Column(options : ["default" => 1])]
     private ?int $SMTP = null;
 
+    #[ORM\Column]
+    private ?bool $Closed = null;
+
     public function __construct()
     {
         $this->Users = new ArrayCollection();
@@ -297,6 +300,18 @@ class Events
     public function setSMTP(int $SMTP): self
     {
         $this->SMTP = $SMTP;
+
+        return $this;
+    }
+
+    public function isClosed(): ?bool
+    {
+        return $this->Closed;
+    }
+
+    public function setClosed(bool $Closed): self
+    {
+        $this->Closed = $Closed;
 
         return $this;
     }
