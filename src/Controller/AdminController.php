@@ -17,6 +17,7 @@ use App\Form\AdminLoginType;
 use App\Form\EventAddDataType;
 use App\Form\EventType;
 use App\Form\EmailTestType;
+use App\Form\ResetPasswordType;
 
 use App\Entity\Users;
 use App\Entity\Events;
@@ -609,6 +610,44 @@ class AdminController extends AbstractController
             $session->set('message', "New password was send to $email. New password: $pass");
             return $this->redirectToRoute('app_admin_event', array('id' => $event_id));
         }
+    }
+
+    #[Route('/admin/resetpassword', name: 'app_admin_rpass')]
+    public function resetpasswordpage(EntityManagerInterface $entityManager,Request $request): Response
+    {
+        $session = $request->getSession();
+        $message = null;
+        if ($session->get('message') != "") {
+            $message = $session->get('message');
+            $session->set('message', "");
+        }
+
+        $usersRepo = $entityManager->getRepository(Users::class);
+
+        $resetForm = $this->createForm(ResetPasswordType::class);
+
+        $resetForm->handleRequest($request);
+
+        if ($resetForm->isSubmitted() && $resetForm->isValid()) {
+            $email = $resetForm->get('email')->getData();
+            $user = $usersRepo->findOneBy([
+                'email' => $email,
+            ]);
+            if ($user != null) {
+                $pass = self::generateStrongPassword();
+                $hpass = password_hash($pass, PASSWORD_DEFAULT);
+                $user->setPassword($hpass);
+                $entityManager->flush();
+            }
+            $message = "New password for $email: $pass";
+            $session->set('message', $message);
+            return $this->redirectToRoute('app_admin_rpass');
+        }
+
+        return $this->render('admin/ressetpass.html.twig', [
+            'message' => $message,
+            'form' => $resetForm,
+        ]); 
     }
 
     #[Route('/admin/logout', name: 'app_admin_logout')]

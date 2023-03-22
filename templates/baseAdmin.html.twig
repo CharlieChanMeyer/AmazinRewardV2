@@ -64,6 +64,18 @@
                         ">Admin management</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link 
+                        {% if current_path == 'app_admin_rpass' %}
+                            active
+                        {% endif %}" href="
+                        {% if current_path == 'app_admin_rpass' %}
+                            #
+                        {% else %}
+                            {{ path('app_admin_rpass') }}
+                        {% endif %}
+                        ">Reset password</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" 
                         href="{{ path('app_admin_logout') }}">
                             Logout
