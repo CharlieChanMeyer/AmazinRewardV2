@@ -133,54 +133,126 @@ class MainController extends AbstractController
                     $entityManager->flush();
                 } else {
                     mb_language("japanese");
-                mb_internal_encoding("UTF-8");
+                    mb_internal_encoding("UTF-8");
 
-                $mail = new PHPMailer(true);
+                    $mail = new PHPMailer(true);
 
-                $mail->CharSet = "iso-2022-jp";
-                $mail->Encoding = "7bit";
-                $mail->setLanguage('ja', 'PHPMailer/language/');
+                    $mail->CharSet = "iso-2022-jp";
+                    $mail->Encoding = "7bit";
+                    $mail->setLanguage('ja', 'PHPMailer/language/');
 
-                $mail->isSMTP();
-                $mail->SMTPDebug = false;
-                $mail->Debugoutput = 'html';
-                $mail->Host = 'smtp.gmail.com';
-                $mail->Port = 587;
-                $mail->SMTPSecure = 'tls';
-                $mail->SMTPAuth = true;
-                
-                $mail->Username = $event->getSMTPEmail();
-                $mail->Password =self::decrypt($event->getSMTPPassword());
-                $mail->setFrom($event->getSMTPEmail(), mb_encode_mimeheader('アマゾンコード特典システム'));
+                    $mail->isSMTP();
+                    $mail->SMTPDebug = false;
+                    $mail->Debugoutput = 'html';
+                    $mail->Host = 'smtp.gmail.com';
+                    $mail->Port = 587;
+                    $mail->SMTPSecure = 'tls';
+                    $mail->SMTPAuth = true;
+                    
+                    $mail->Username = $event->getSMTPEmail();
+                    $mail->Password =self::decrypt($event->getSMTPPassword());
+                    $mail->setFrom($event->getSMTPEmail(), mb_encode_mimeheader('アマゾンコード特典システム'));
 
-                $mail->addAddress("masa229@gmail.com"); 
-                $mail->Subject = mb_encode_mimeheader('コード欠損');
-                                                    
-                $email_body = mb_convert_encoding("Amazon Code Reward。\n
-                イベント $eventID でのコードが足りない 。コードの追加をお願いします ","JIS","UTF-8");
+                    $mail->addAddress("masa229@gmail.com"); 
+                    $mail->Subject = mb_encode_mimeheader('コード欠損');
+                                                        
+                    $email_body = mb_convert_encoding("Amazon Code Reward。\n
+                    イベント $eventID でのコードが足りない 。コードの追加をお願いします ","JIS","UTF-8");
 
-                $email_body = wordwrap($email_body,70);
+                    $email_body = wordwrap($email_body,70);
 
-                $mail->msgHTML(mb_convert_encoding("
-                <p>Amazon Code Reward。<br />
-                イベント $eventID でのコードが足りない 。コードの追加をお願いします</p>","JIS","UTF-8"));
+                    $mail->msgHTML(mb_convert_encoding("
+                    <p>Amazon Code Reward。<br />
+                    イベント $eventID でのコードが足りない 。コードの追加をお願いします</p>","JIS","UTF-8"));
 
-                $mail->AltBody = $email_body;
+                    $mail->AltBody = $email_body;
 
-                if (!$mail->send()) {
-                    $message = "Mailer Error $line:\n";
-                    $message .= $mail->ErrorInfo;
-                } else {
-                    $entityManager->flush();
-                }
+                    if (!$mail->send()) {
+                        $message = "Mailer Error $line:\n";
+                        $message .= $mail->ErrorInfo;
+                    } else {
+                        $entityManager->flush();
+                    }
 
                     $session->set('message', "システムのコードが足りない。管理者に連絡した。明日、再試行してください");
                     return $this->redirectToRoute('app_main_index', array('eventID' => $eventID));
                 }
             } else {
-                foreach ($oldcode as $code) {
-                    array_push($codeArray,($codeRepo->find($code->getAmazonCodeId()))->getAmazonCode());
+                $nbTotalCode = $nbCode->getNbCode();
+
+                
+                if (count($oldcode) != $nbTotalCode) {
+                    $code = $codeRepo->findBy([
+                        'event' => $event,
+                        'used' => 0
+                    ],null,$nbTotalCode - count($oldcode));
+                    if ($nbTotalCode - count($oldcode) == sizeof($code)) {
+                        foreach ($code as $codeO) {
+                            $codeO->setUsed(1);
+                            $log = new HistoryLog();
+                            $log->setEmailId($user);
+                            $log->setAmazonCodeId($codeO);
+                            $log->setEventId($event);
+                            $log->setDatetime(new \DateTime());
+                            $historyRepo->save($log);
+                            array_push($codeArray,$codeO->getAmazonCode());
+                        }
+                        $entityManager->flush();
+                    } else {
+                        mb_language("japanese");
+                        mb_internal_encoding("UTF-8");
+    
+                        $mail = new PHPMailer(true);
+    
+                        $mail->CharSet = "iso-2022-jp";
+                        $mail->Encoding = "7bit";
+                        $mail->setLanguage('ja', 'PHPMailer/language/');
+    
+                        $mail->isSMTP();
+                        $mail->SMTPDebug = false;
+                        $mail->Debugoutput = 'html';
+                        $mail->Host = 'smtp.gmail.com';
+                        $mail->Port = 587;
+                        $mail->SMTPSecure = 'tls';
+                        $mail->SMTPAuth = true;
+                        
+                        $mail->Username = $event->getSMTPEmail();
+                        $mail->Password =self::decrypt($event->getSMTPPassword());
+                        $mail->setFrom($event->getSMTPEmail(), mb_encode_mimeheader('アマゾンコード特典システム'));
+    
+                        $mail->addAddress("masa229@gmail.com"); 
+                        $mail->Subject = mb_encode_mimeheader('コード欠損');
+                                                            
+                        $email_body = mb_convert_encoding("Amazon Code Reward。\n
+                        イベント $eventID でのコードが足りない 。コードの追加をお願いします ","JIS","UTF-8");
+    
+                        $email_body = wordwrap($email_body,70);
+    
+                        $mail->msgHTML(mb_convert_encoding("
+                        <p>Amazon Code Reward。<br />
+                        イベント $eventID でのコードが足りない 。コードの追加をお願いします</p>","JIS","UTF-8"));
+    
+                        $mail->AltBody = $email_body;
+    
+                        if (!$mail->send()) {
+                            $message = "Mailer Error $line:\n";
+                            $message .= $mail->ErrorInfo;
+                        } else {
+                            $entityManager->flush();
+                        }
+    
+                        $session->set('message', "システムのコードが足りない。管理者に連絡した。明日、再試行してください");
+                        return $this->redirectToRoute('app_main_index', array('eventID' => $eventID));
+                    }
+                    foreach ($oldcode as $code) {
+                        array_push($codeArray,($codeRepo->find($code->getAmazonCodeId()))->getAmazonCode());
+                    }
+                } else {
+                    foreach ($oldcode as $code) {
+                        array_push($codeArray,($codeRepo->find($code->getAmazonCodeId()))->getAmazonCode());
+                    }
                 }
+                
             }
             
         }

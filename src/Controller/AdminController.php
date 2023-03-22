@@ -295,6 +295,18 @@ class AdminController extends AbstractController
                                 return $this->redirectToRoute('app_admin_event', array('id' => $event->getId()));
                             }
                             
+                        } else {
+                            $user = $usersRepo->findOneBy([
+                                'email' => $line,
+                            ]);
+                            $nbCode = $nbCodeRepo->findOneBy([
+                                'User' => $user,
+                                'Event' => $event,
+                            ]);
+                            $nbCode->setNbCode($nbCode->getNbCode()+1);
+
+                            $nbCodeRepo->save($nbCode);
+                            $entityManager->flush();
                         }
                     }
                     $session->set('message', "Emails send");
