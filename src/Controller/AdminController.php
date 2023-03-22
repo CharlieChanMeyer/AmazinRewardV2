@@ -184,9 +184,11 @@ class AdminController extends AbstractController
         $eventHistoryLog = $event->getHistory()->toArray();
 
         $eventHistoryUsers = array();
+        $logs = array();
         
         foreach ($eventHistoryLog as $history) {
             array_push($eventHistoryUsers, $history->getEmailId());
+            array_push($logs, [$history->getEmailId()->getId(),$history->getEmailId()->getEmail(),$history->getDatetime()->format('Y-m-d H:i:s')]);
         }
 
         $eventUsers= array();
@@ -375,6 +377,7 @@ class AdminController extends AbstractController
             'form' => $form,
             'emailTestForm' => $emailTestForm,
             'totalGotCode' => $totalGotCode,
+            'logs' => $logs,
         ]); 
     }
 

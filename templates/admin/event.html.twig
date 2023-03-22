@@ -82,6 +82,7 @@
         <div class="row m-3 text-center">
             <div class="nav nav-tabs nav-justified mb-3" id="nav-tab" role="tablist">
                 <button class="nav-link active text-white bg-secondary" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-code" type="button" role="tab" aria-controls="nav-code" aria-selected="true">Users</button>
+                <button class="nav-link text-white bg-secondary" id="nav-logs-tab" data-bs-toggle="tab" data-bs-target="#nav-logs" type="button" role="tab" aria-controls="nav-logs" aria-selected="false">Logs</button>
                 <button class="nav-link text-white bg-secondary" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-upload" type="button" role="tab" aria-controls="nav-upload" aria-selected="false">Add new data</button>
                 <a class="btn btn-secondary nav-link text-white bg-secondary" href="{{ path('app_admin_edit_event', {'id': event.id}) }}" role="button">Edit</a>
             </div>
@@ -135,6 +136,26 @@
                                 {{ form_row(form.submit) }}
                             </div>
                     {{ form_end(form) }}
+                </div>
+                <div class="tab-pane fade" id="nav-logs" role="tabpanel" aria-labelledby="nav-logs-tab">
+                    <table class="table w-75 table-striped border border-dark mx-auto text-light">
+                        <thead>
+                            <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">User email</th>
+                            <th scope="col">date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr class="text-light">
+                                <th scope="row">{{ log[0] }}</th>
+                                <td>{{ log[1] }}</td>
+                                <td>{{ log[2] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
