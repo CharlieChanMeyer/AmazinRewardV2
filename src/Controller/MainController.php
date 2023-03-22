@@ -23,7 +23,7 @@ use App\Entity\NbCodeUserEvent;
 
 class MainController extends AbstractController
 {
-    #[Route('/{eventID}', name: 'app_main_index', requirements: ['eventID' => '\d+'])]
+    #[Route('/event/{eventID}/', name: 'app_main_index', requirements: ['eventID' => '\d+'])]
     public function index(EntityManagerInterface $entityManager,Request $request,int $eventID): Response
     {
         $session = $request->getSession();
@@ -199,7 +199,7 @@ class MainController extends AbstractController
     {
         $userRepo = $entityManager->getRepository(Users::class);
         $session = $request->getSession();
-        $message = $session->get('eventID');
+        $eventID = $session->get('eventID');
         $resetForm = $this->createForm(ResetPasswordType::class);
 
         $resetForm->handleRequest($request);
@@ -277,7 +277,8 @@ class MainController extends AbstractController
 
         return $this->render('main/resetpassword.html.twig', [
             'controller_name' => 'MainController',
-            'form' => $resetForm
+            'form' => $resetForm,
+            'event_id' => $eventID,
         ]);
     }
 

@@ -396,6 +396,7 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $event->setSMTPPassword(self::encrypt($form->get('SMTPPassword')->getData()));
+            $event->setClosed(false);
             $eventsRepo->save($event);
             $entityManager->flush();
             $session->set('message', "The event has been saved.");
@@ -676,15 +677,19 @@ class AdminController extends AbstractController
             $mail->Port = 587;
             $mail->SMTPSecure = 'tls';
         } else if ($event->getSMTP() == 2) {
-            $mail->Host = 'smtp-mail.outlook.com';
+            $mail->Host = 'smtpauth.omu.ac.jp';
             $mail->Port = 587;
-            $mail->SMTPSecure = 'tls';
+            $mail->SMTPSecure = 'STARTTLS';
         }
         $mail->SMTPAuth = true;
         
         $mail->Username = $event->getSMTPEmail();
         $mail->Password = self::decrypt($event->getSMTPPassword());
-        $mail->setFrom($event->getSMTPEmail(), mb_encode_mimeheader($event->getEmailHeader()));
+        if ($event->getSMTP() == 1) {
+            $mail->setFrom($event->getSMTPEmail(), mb_encode_mimeheader($event->getEmailHeader()));
+        } else if ($event->getSMTP() == 2) {
+            $mail->setFrom($event->getSMTPEmail()."@st.omu.ac.jp", mb_encode_mimeheader($event->getEmailHeader()));
+        }
 
         $mail->addAddress($line); 
         $mail->Subject = mb_encode_mimeheader($event->getEmailSubject());

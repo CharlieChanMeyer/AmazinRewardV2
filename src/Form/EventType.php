@@ -30,11 +30,11 @@ class EventType extends AbstractType
             ->add('Description',TextareaType::class, [
                 'label' => "Description of the event: ",
             ])
-            ->add('SMTPEmail',EmailType::class, [
-                'label' => "Email that will be used to send emails to participants: ",
+            ->add('SMTPEmail',TextType::class, [
+                'label' => "Login (Email or id) that will be used to send emails to participants: ",
             ])
             ->add('SMTP',IntegerType::class, [
-                'label' => "SMTP to use (1: Gmail, 2: Outlook): ",
+                'label' => "SMTP to use (1: Gmail, 2: OMU SMTP Server): ",
             ])
             ->add('SMTPPassword',TextType::class, [
                 'label' => "SMTP password of the email: ",
