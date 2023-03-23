@@ -23,6 +23,7 @@ use App\Entity\Users;
 use App\Entity\Events;
 use App\Entity\CodeAmazon;
 use App\Entity\NbCodeUserEvent;
+use App\Entity\HistoryLog;
 
 class AdminController extends AbstractController
 {
@@ -164,6 +165,7 @@ class AdminController extends AbstractController
         $eventsRepo = $entityManager->getRepository(Events::class);
         $codeAmazonRepo = $entityManager->getRepository(CodeAmazon::class);
         $nbCodeRepo = $entityManager->getRepository(NbCodeUserEvent::class);
+        $historyLogRepo = $entityManager->getRepository(HistoryLog::class);
         $event = $eventsRepo->find($id);
         $codeAmazonUsed = count($codeAmazonRepo->findBy([
             'event' => $event,
@@ -194,11 +196,20 @@ class AdminController extends AbstractController
         $eventUsers= array();
         $totalGotCode = 0;
         foreach ($eventUsersArray as $user) {
-            if (in_array($user,$eventHistoryUsers)) {
-                array_push($eventUsers,array($user->getId(),$user->getEmail(),"Yes"));
+            $nbCodeGot = sizeOf($historyLogRepo->findBy([
+                "email_id" => $user,
+                "event_id" => $event,
+            ]));
+            $nbCodeTotal = $nbCodeRepo->findOneBy([
+                "User" => $user,
+                "Event" => $event,
+            ])->getNbCode();
+            
+            if ($nbCodeGot == $nbCodeTotal) {
                 $totalGotCode++;
+                array_push($eventUsers,array($user->getId(),$user->getEmail(),"$nbCodeGot/$nbCodeTotal"));
             } else {
-                array_push($eventUsers,array($user->getId(),$user->getEmail(),"No"));
+                array_unshift($eventUsers,array($user->getId(),$user->getEmail(),"$nbCodeGot/$nbCodeTotal"));
             }
         }
 
