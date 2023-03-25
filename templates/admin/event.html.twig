@@ -37,6 +37,11 @@
                         <a class="btn btn-secondary" data-bs-toggle="collapse" href="#multiCollapseExample1" role="button" aria-expanded="false" aria-controls="multiCollapseExample1">Email body</a>
                         <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample2" aria-expanded="false" aria-controls="multiCollapseExample2">Email Alt Body</button>
                         <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#multiCollapseExample3" aria-expanded="false" aria-controls="multiCollapseExample3">Send a test Email</button>
+                        {% if event.Closed %}
+                            <a class="btn btn-success" href="{{ path('app_admin_open_event', {'id': event.id}) }}" role="button">Open Event</a>
+                        {% else %}
+                            <a class="btn btn-danger" href="{{ path('app_admin_close_event', {'id': event.id}) }}" role="button">Close Event</a>
+                        {% endif %}
                     </p>
                     <div class="row">
                         <div class="collapse multi-collapse" id="multiCollapseExample1">

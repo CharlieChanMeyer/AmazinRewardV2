@@ -54,10 +54,15 @@ class MainController extends AbstractController
                     $eventRepo = $entityManager->getRepository(Events::class);
                     $user = $userRepo->find($userID);
                     $event = $eventRepo->find($eventID);
-                    $userEvents = ($user->getEvents())->toArray();
-                    if (!in_array($event,$userEvents)){
-                        $success = "ご案内のイベントには登録されていないようです";
+                    if ($event->isClosed()) {
+                        $success = "このイベントは終了しました";
+                    } else {
+                        $userEvents = ($user->getEvents())->toArray();
+                        if (!in_array($event,$userEvents)){
+                            $success = "ご案内のイベントには登録されていないようです";
+                        }
                     }
+                    
                 }
             } else {
                 $success = "入力されたメールはシステムに登録されていません";

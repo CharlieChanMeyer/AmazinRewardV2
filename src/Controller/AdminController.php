@@ -392,6 +392,30 @@ class AdminController extends AbstractController
         ]); 
     }
 
+    #[Route('/admin/event/close/{id}', name: 'app_admin_close_event', requirements: ['id' => '\d+'])]
+    public function close_event(EntityManagerInterface $entityManager,Request $request,int $id): Response
+    {
+        $session = $request->getSession();
+        $eventsRepo = $entityManager->getRepository(Events::class);
+        $event = $eventsRepo->find($id);
+        $event->setClosed(true);
+        $entityManager->flush();
+        $session->set('message', "イベントの開催は終了しました");
+        return $this->redirectToRoute('app_admin_event', array('id' => $id));
+    }
+
+    #[Route('/admin/event/open/{id}', name: 'app_admin_open_event', requirements: ['id' => '\d+'])]
+    public function open_event(EntityManagerInterface $entityManager,Request $request,int $id): Response
+    {
+        $session = $request->getSession();
+        $eventsRepo = $entityManager->getRepository(Events::class);
+        $event = $eventsRepo->find($id);
+        $event->setClosed(false);
+        $entityManager->flush();
+        $session->set('message', "イベントの開催が決定しました");
+        return $this->redirectToRoute('app_admin_event', array('id' => $id));
+    }
+
     #[Route('/admin/event/create/', name: 'app_admin_create_event')]
     public function create_event(EntityManagerInterface $entityManager,Request $request, SluggerInterface $slugger): Response
     {
