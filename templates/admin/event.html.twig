@@ -108,7 +108,8 @@
                             {% else %}
                             User)
                             {% endif %}</th>
-                            <th scope="col">Reset password</th>
+                            <th scope="col">Edit Email</th>
+                            <th scope="col">Reset Password</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -117,6 +118,7 @@
                                 <th scope="row">{{ user[0] }}</th>
                                 <td>{{ user[1] }}</td>
                                 <td>{{ user[2] }}</td>
+                                <td><a class="btn btn-warning" href="{{ path('app_admin_editemail', {'user_id': user[0], 'event_id': event.id}) }}" role="button">Edit</a></td>
                                 <td><a class="btn btn-danger" href="{{ path('app_admin_resetpassword', {'user_id': user[0], 'event_id': event.id}) }}" role="button">Reset</a></td>
                             </tr>
                             {% endfor %}

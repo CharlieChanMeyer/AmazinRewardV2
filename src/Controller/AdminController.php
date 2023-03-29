@@ -18,6 +18,7 @@ use App\Form\EventAddDataType;
 use App\Form\EventType;
 use App\Form\EmailTestType;
 use App\Form\ResetPasswordType;
+use App\Form\EditUserType;
 
 use App\Entity\Users;
 use App\Entity\Events;
@@ -650,6 +651,45 @@ class AdminController extends AbstractController
         }
     }
 
+    #[Route('/admin/event/{event_id}/editemail/{user_id}', name: 'app_admin_editemail', requirements: ['user_id' => '\d+','event_id' => '\d+'])]
+    public function editEmail(EntityManagerInterface $entityManager,Request $request,int $user_id,int $event_id, SluggerInterface $slugger): Response
+    {
+        $session = $request->getSession();
+        $message = null;
+        if ($session->get('message') != "") {
+            $message = $session->get('message');
+            $session->set('message', "");
+        }
+
+
+        $usersRepo = $entityManager->getRepository(Users::class);
+        $user = $usersRepo->find($user_id);
+
+        $eventsRepo = $entityManager->getRepository(Events::class);
+        $event = $eventsRepo->find($event_id);
+        $form = $this->createForm(EditUserType::class,$user);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $pass = self::generateStrongPassword();
+            $hpass = password_hash($pass, PASSWORD_DEFAULT);
+            $user->setPassword($hpass);
+
+            $usersRepo->save($user);
+            $entityManager->flush();
+
+            $message = self::sendEmail($event,$user->getEmail(),$pass);
+
+            $session->set('message', "The edit has been saved.");
+            return $this->redirectToRoute('app_admin_event', array('id' => $event->getId()));
+        }
+
+        return $this->render('admin/editUser.html.twig', [
+            'message' => $message,
+            'form' => $form,
+        ]); 
+    }
+
     #[Route('/admin/resetpassword', name: 'app_admin_rpass')]
     public function resetpasswordpage(EntityManagerInterface $entityManager,Request $request): Response
     {
@@ -754,7 +794,7 @@ class AdminController extends AbstractController
 
         $mail = new PHPMailer(true);
 
-        $mail->CharSet = "iso-2022-jp";
+        $mail->CharSet = "ISO-2022-JP";
         $mail->Encoding = "7bit";
         $mail->setLanguage('ja', 'PHPMailer/language/');
 
