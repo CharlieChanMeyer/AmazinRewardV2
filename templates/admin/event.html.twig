@@ -93,6 +93,7 @@
             </div>
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active" id="nav-code" role="tabpanel" aria-labelledby="nav-code-tab">
+                    <a class="btn btn-secondary mb-2" href="{{ path('app_admin_donwload_event', {'id': event.id}) }}" role="button">Download list</a>
                     <table class="table w-75 table-striped border border-dark mx-auto text-light">
                         <thead>
                             <tr>
@@ -126,6 +127,7 @@
                     </table>
                 </div>
                 <div class="tab-pane fade" id="nav-upload" role="tabpanel" aria-labelledby="nav-upload-tab">
+                    
                     {{ form_start(form) }}
                         <div class="text-danger">
                             {{ form_errors(form) }}
@@ -145,6 +147,7 @@
                     {{ form_end(form) }}
                 </div>
                 <div class="tab-pane fade" id="nav-logs" role="tabpanel" aria-labelledby="nav-logs-tab">
+                    <a class="btn btn-secondary mb-2" href="{{ path('app_admin_logs_event', {'id': event.id}) }}" role="button">Download logs</a>
                     <table class="table w-75 table-striped border border-dark mx-auto text-light">
                         <thead>
                             <tr>

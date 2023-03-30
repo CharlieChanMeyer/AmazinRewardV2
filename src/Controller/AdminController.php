@@ -26,6 +26,10 @@ use App\Entity\CodeAmazon;
 use App\Entity\NbCodeUserEvent;
 use App\Entity\HistoryLog;
 
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Path;
+
 class AdminController extends AbstractController
 {
     #[Route('/admin/', name: 'app_admin_index')]
@@ -414,6 +418,88 @@ class AdminController extends AbstractController
         $event->setClosed(false);
         $entityManager->flush();
         $session->set('message', "イベントの開催が決定しました");
+        return $this->redirectToRoute('app_admin_event', array('id' => $id));
+    }
+
+    #[Route('/admin/event/donwload/{id}', name: 'app_admin_donwload_event', requirements: ['id' => '\d+'])]
+    public function donwload_event(EntityManagerInterface $entityManager,Request $request,int $id): Response
+    {
+        $session = $request->getSession();
+        $eventsRepo = $entityManager->getRepository(Events::class);
+        $event = $eventsRepo->find($id);
+        
+        $filesystem = new Filesystem();
+        $file = 'csv/list_user_event'.$event->getId().'.csv';
+        if ($filesystem->exists($file)) {
+            $filesystem->remove([$file]);
+        }
+        $filesystem->touch($file);
+
+        $codeAmazonRepo = $entityManager->getRepository(CodeAmazon::class);
+        $nbCodeRepo = $entityManager->getRepository(NbCodeUserEvent::class);
+        $historyLogRepo = $entityManager->getRepository(HistoryLog::class);
+        $eventUsersArray = $event->getUsers()->toArray();
+
+        $eventUsers= array();
+        foreach ($eventUsersArray as $user) {
+            $nbCodeGot = sizeOf($historyLogRepo->findBy([
+                "email_id" => $user,
+                "event_id" => $event,
+            ]));
+            $nbCodeTotal = $nbCodeRepo->findOneBy([
+                "User" => $user,
+                "Event" => $event,
+            ])->getNbCode();
+            
+            if ($nbCodeGot == $nbCodeTotal) {
+                array_push($eventUsers,array($user->getId(),$user->getEmail(),"$nbCodeGot/$nbCodeTotal"));
+            } else {
+                array_unshift($eventUsers,array($user->getId(),$user->getEmail(),"$nbCodeGot/$nbCodeTotal"));
+            }
+        }
+        foreach ($eventUsers as $line) {
+            $filesystem->appendToFile($file, implode(",",$line)."\n");
+        }
+
+        return $this->file($file);
+
+        return $this->redirectToRoute('app_admin_event', array('id' => $id));
+    }
+
+    #[Route('/admin/event/logs/{id}', name: 'app_admin_logs_event', requirements: ['id' => '\d+'])]
+    public function logs_event(EntityManagerInterface $entityManager,Request $request,int $id): Response
+    {
+        $session = $request->getSession();
+        $eventsRepo = $entityManager->getRepository(Events::class);
+        $event = $eventsRepo->find($id);
+        
+        $filesystem = new Filesystem();
+        $file = 'csv/logs_event'.$event->getId().'.csv';
+        if ($filesystem->exists($file)) {
+            $filesystem->remove([$file]);
+        }
+        $filesystem->touch($file);
+
+        $codeAmazonRepo = $entityManager->getRepository(CodeAmazon::class);
+        $nbCodeRepo = $entityManager->getRepository(NbCodeUserEvent::class);
+        $historyLogRepo = $entityManager->getRepository(HistoryLog::class);
+        $eventUsersArray = $event->getUsers()->toArray();
+
+        $eventHistoryLog = $event->getHistory()->toArray();
+
+        $eventHistoryUsers = array();
+        $logs = array();
+        
+        foreach ($eventHistoryLog as $history) {
+            array_push($eventHistoryUsers, $history->getEmailId());
+            array_push($logs, [$history->getEmailId()->getId(),$history->getEmailId()->getEmail(),$history->getDatetime()->format('Y-m-d H:i:s')]);
+        }
+        foreach ($logs as $line) {
+            $filesystem->appendToFile($file, implode(",",$line)."\n");
+        }
+
+        return $this->file($file);
+
         return $this->redirectToRoute('app_admin_event', array('id' => $id));
     }
 
