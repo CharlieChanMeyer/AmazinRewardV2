@@ -10,6 +10,13 @@
             <h4>あなたのメールアドレス : {{ email }}</h4>
         </div>
     </div>
+    {% if message is not null %}
+    <div class="mt-2 p-2 bg-primary text-white rounded text-center">
+        <h4 class="text-danger">
+            {{ message }}
+        </h4>
+    </div>
+    {% endif %}
     <div class="container mt-3">
         <div class="mt-4 p-5 bg-success text-white rounded text-center">
             {% for code in codeArray %}

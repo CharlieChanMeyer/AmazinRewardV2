@@ -54,13 +54,9 @@ class MainController extends AbstractController
                     $eventRepo = $entityManager->getRepository(Events::class);
                     $user = $userRepo->find($userID);
                     $event = $eventRepo->find($eventID);
-                    if ($event->isClosed()) {
-                        $success = "このイベントは終了しました";
-                    } else {
-                        $userEvents = ($user->getEvents())->toArray();
-                        if (!in_array($event,$userEvents)){
-                            $success = "ご案内のイベントには登録されていないようです";
-                        }
+                    $userEvents = ($user->getEvents())->toArray();
+                    if (!in_array($event,$userEvents)){
+                        $success = "ご案内のイベントには登録されていないようです";
                     }
                     
                 }
@@ -92,6 +88,11 @@ class MainController extends AbstractController
         $session->set('userID',null);
         $eventID = $session->get('eventID');
         $session->set('eventID',null);
+        $message = null;
+        if ($session->get('message') != "") {
+            $message = $session->get('message');
+            $session->set('message', "");
+        }
 
         $userRepo = $entityManager->getRepository(Users::class);
         $eventRepo = $entityManager->getRepository(Events::class);
@@ -113,6 +114,10 @@ class MainController extends AbstractController
             ]);
             $codeArray = array();
             if (count($oldcode) == 0) {
+                if ($event->isClosed()) {
+                    $session->set('message', "このイベントは終了しました");
+                    return $this->redirectToRoute('app_main_index', array('eventID' => $eventID));
+                }
                 if ($nbCode != null) {
                     $code = $codeRepo->findBy([
                         'event' => $event,
@@ -186,7 +191,7 @@ class MainController extends AbstractController
                 $nbTotalCode = $nbCode->getNbCode();
 
                 
-                if (count($oldcode) != $nbTotalCode) {
+                if (count($oldcode) != $nbTotalCode && !$event->isClosed())  {
                     $code = $codeRepo->findBy([
                         'event' => $event,
                         'used' => 0
@@ -253,6 +258,7 @@ class MainController extends AbstractController
                         array_push($codeArray,($codeRepo->find($code->getAmazonCodeId()))->getAmazonCode());
                     }
                 } else {
+                    $message = "このイベントは終了しました";
                     foreach ($oldcode as $code) {
                         array_push($codeArray,($codeRepo->find($code->getAmazonCodeId()))->getAmazonCode());
                     }
@@ -268,6 +274,7 @@ class MainController extends AbstractController
             'email' => $user->getEmail(),
             'event_id' => $eventID,
             'codeArray' => $codeArray,
+            'message' => $message,
         ]);
     }
 
